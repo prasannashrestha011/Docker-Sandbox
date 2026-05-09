@@ -1,16 +1,16 @@
-package sandbox_container
+package container
 
 import (
 	"context"
 	"fmt"
 
-	sandbox_request "main/types"
+	"main/internal/sandbox/types"
 
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
 )
 
-func CreateContainer(ctx context.Context, apiClient *client.Client, req *sandbox_request.CreateRequest) (string, error) {
+func CreateContainer(ctx context.Context, apiClient *client.Client, req *types.CreateRequest) (string, error) {
 	resp, err := apiClient.ContainerCreate(ctx, client.ContainerCreateOptions{
 		Config: &container.Config{
 			Image:     req.ImageID,

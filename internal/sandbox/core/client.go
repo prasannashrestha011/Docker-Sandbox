@@ -1,13 +1,13 @@
-package sandbox_client
+package core
 
 import (
 	"context"
 	"log"
 	"time"
 
-	sandbox_container "main/actions/container"
-	sandbox_image "main/actions/image"
-	sandbox_request "main/types"
+	"main/internal/sandbox/docker/container"
+	"main/internal/sandbox/docker/image"
+	"main/internal/sandbox/types"
 
 	"github.com/google/uuid"
 	"github.com/moby/moby/client"
@@ -24,11 +24,11 @@ func NewSandboxClient() (*client.Client, error) {
 	return apiClient, nil
 }
 
-func CreateNewSandBox(apiClient *client.Client, req *sandbox_request.CreateRequest) (*sandbox_request.CreateResponse, error) {
+func CreateNewSandBox(apiClient *client.Client, req *types.CreateRequest) (*types.CreateResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), req.SessionTimeout)
 	defer cancel()
-	sandbox_image.PullImage(ctx, apiClient, req.ImageID)
-	containerID, err := sandbox_container.CreateContainer(ctx, apiClient, req)
+	image.PullImage(ctx, apiClient, req.ImageID)
+	containerID, err := container.CreateContainer(ctx, apiClient, req)
 	if err != nil {
 		return nil, err
 	}
@@ -41,10 +41,10 @@ func CreateNewSandBox(apiClient *client.Client, req *sandbox_request.CreateReque
 	}
 
 	sessionID, _ := uuid.NewUUID()
-	return &sandbox_request.CreateResponse{
+	return &types.CreateResponse{
 		ContainerID: containerID,
 		SessionID:   sessionID,
-		Status:      "active",
+		Status:      types.StateActive,
 		CreatedAt:   time.Now(),
 		ExpiresAt:   time.Now().Add(req.SessionTimeout),
 	}, nil

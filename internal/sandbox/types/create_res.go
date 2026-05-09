@@ -1,4 +1,4 @@
-package sandbox_request
+package types
 
 import (
 	"time"

@@ -1,4 +1,4 @@
-package sandbox_image
+package image
 
 func LoadImage(env string) string {
 	switch env {

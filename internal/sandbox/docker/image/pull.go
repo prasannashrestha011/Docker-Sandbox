@@ -1,4 +1,4 @@
-package sandbox_image
+package image
 
 import (
 	"context"

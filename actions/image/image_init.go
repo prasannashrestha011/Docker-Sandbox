@@ -1,1 +1,0 @@
-package sandbox_image

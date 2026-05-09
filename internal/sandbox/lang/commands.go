@@ -1,4 +1,4 @@
-package sandbox_executor
+package lang
 
 var LangCommands = map[string][]string{
 	"python":     {"python", "-c"},
