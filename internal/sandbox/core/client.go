@@ -3,17 +3,27 @@ package core
 import (
 	"context"
 	"log"
-	"time"
 
+	"main/internal/repository/model"
 	"main/internal/sandbox/docker/container"
 	"main/internal/sandbox/docker/image"
-	"main/internal/sandbox/types"
 
 	"github.com/google/uuid"
 	"github.com/moby/moby/client"
 )
 
-func NewSandboxClient() (*client.Client, error) {
+// SandboxClient defines sandbox lifecycle operations.
+type SandboxClient interface {
+	Create(ctx context.Context, req *model.Sandbox) error
+	Close() error
+}
+
+type dockerSandboxClient struct {
+	apiClient *client.Client
+}
+
+// NewSandboxClient returns a Docker-backed SandboxClient.
+func NewSandboxClient() (SandboxClient, error) {
 	apiClient, err := client.New(
 		client.FromEnv,
 		client.WithUserAgent("my-application/1.0.0"),
@@ -21,31 +31,30 @@ func NewSandboxClient() (*client.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return apiClient, nil
+	return &dockerSandboxClient{apiClient: apiClient}, nil
 }
 
-func CreateNewSandBox(apiClient *client.Client, req *types.CreateRequest) (*types.CreateResponse, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), req.SessionTimeout)
+func (c *dockerSandboxClient) Create(ctx context.Context, req *model.Sandbox) error {
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, req.SessionTimeout)
 	defer cancel()
-	image.PullImage(ctx, apiClient, req.ImageID)
-	containerID, err := container.CreateContainer(ctx, apiClient, req)
+
+	image.PullImage(ctxWithTimeout, c.apiClient, req.ImageID)
+	containerID, err := container.CreateContainer(ctxWithTimeout, c.apiClient, req)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	log.Println("Container ID: ", containerID)
-
-	log.Println("Starting the container")
-	_, err = apiClient.ContainerStart(ctx, containerID, client.ContainerStartOptions{})
+	_, err = c.apiClient.ContainerStart(ctxWithTimeout, containerID, client.ContainerStartOptions{})
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	sessionID, _ := uuid.NewUUID()
-	return &types.CreateResponse{
-		ContainerID: containerID,
-		SessionID:   sessionID,
-		Status:      types.StateActive,
-		CreatedAt:   time.Now(),
-		ExpiresAt:   time.Now().Add(req.SessionTimeout),
-	}, nil
+	req.SessionID = sessionID
+	req.ContainerID = containerID
+	return nil
+}
+
+func (c *dockerSandboxClient) Close() error {
+	return c.apiClient.Close()
 }
