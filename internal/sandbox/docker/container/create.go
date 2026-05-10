@@ -3,14 +3,13 @@ package container
 import (
 	"context"
 	"fmt"
-
-	"main/internal/sandbox/types"
+	"main/internal/repository/model"
 
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
 )
 
-func CreateContainer(ctx context.Context, apiClient *client.Client, req *types.CreateRequest) (string, error) {
+func CreateContainer(ctx context.Context, apiClient *client.Client, req *model.Sandbox) (string, error) {
 	resp, err := apiClient.ContainerCreate(ctx, client.ContainerCreateOptions{
 		Config: &container.Config{
 			Image:     req.ImageID,
@@ -20,7 +19,7 @@ func CreateContainer(ctx context.Context, apiClient *client.Client, req *types.C
 			StdinOnce: false,
 		},
 		HostConfig: &container.HostConfig{
-			NetworkMode: container.NetworkMode(req.NetWorkMode),
+			NetworkMode: container.NetworkMode(req.NetworkMode),
 			Resources: container.Resources{
 				Memory:    req.MemoryLimit,
 				NanoCPUs:  req.CPULimit,
