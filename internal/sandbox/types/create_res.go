@@ -1,4 +1,4 @@
-package types
+package sandbox_type
 
 import (
 	"time"
@@ -6,18 +6,11 @@ import (
 	"github.com/google/uuid"
 )
 
-type SandBoxState string
-
-const (
-	StateActive   SandBoxState = "active"
-	StateInActive SandBoxState = "inactive"
-)
-
 // CreateResponse : sandbox creation result
 type CreateResponse struct {
 	ContainerID string
 	SessionID   uuid.UUID
-	Status      SandBoxState
+	Status      SandboxState
 	CreatedAt   time.Time
 	ExpiresAt   time.Time
 	Error       *string
